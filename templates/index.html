@@ -57,15 +57,16 @@
         $.get(fn).done(function (flash) {
             let heatmapLayer = new HeatmapOverlay(heatmap_cfg);
             let osm = new L.TileLayer(
-                map_url, {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
+                map_url,
+                {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
 
             heatmapLayer.setData(flash);
-            let map = L.map('map' + index, {layers: [osm, heatmapLayer]}).setView([62.3, 16.3], 4.5);
+            let map = L.map('map' + index, {layers: [osm, heatmapLayer], dragging: false}).setView([62.3, 16.3], 4.5);
         });
     }
 
     function latest_map(data, map_url) {
-        let map = L.map('map_latest').setView([62.3, 16.3], 4.5);
+        let map = L.map('map_latest', {dragging: false}).setView([62.3, 16.3], 4.5);
         L.tileLayer(map_url, {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);

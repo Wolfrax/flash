@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Flash</title>
+
+    <link rel="shortcut icon" href="https://www.viltstigen.se/favicon.png">
+
+    <script type="text/javascript" charset="utf8" src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+          integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+          crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+            crossorigin=""></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-boundary-canvas@1.0.0/src/BoundaryCanvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+
+    <style>
+        .map {
+            position: relative;
+            height: 600px;
+            width: 100%;
+            background-color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container text-center">
+    <br><br>
+    <hr>
+    <br><br>
+    <div id="chart"></div>
+</div>
+<br><br>
+<hr>
+<footer>
+    <p style="font-size:12px">
+        Copyright (C) Mats Melander
+    </p>
+</footer>
+
+<script>
+    function heatmap(fn, index, map_url, heatmap_cfg) {
+        $.get(fn).done(function (flash) {
+            let heatmapLayer = new HeatmapOverlay(heatmap_cfg);
+            let osm = new L.TileLayer(
+                map_url, {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
+
+            heatmapLayer.setData(flash);
+            let map = L.map('map' + index, {layers: [osm, heatmapLayer]}).setView([62.3, 16.3], 4.5);
+        });
+    }
+
+    function latest_map(data, map_url) {
+        let map = L.map('map_latest').setView([62.3, 16.3], 4.5);
+        L.tileLayer(map_url, {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let myIcon = L.divIcon({className: 'my-div-icon', html: 'X'});
+        data.forEach(function (item) {
+            L.marker([item.lat, item.lon], {icon: myIcon}).addTo(map);
+        });
+
+
+    }
+
+    $(document).ready(function () {
+        $.when(
+            $.get('flash/files/flash_meta.json'),
+            $.get('flash/files/flash_latest.json'),
+            $.get('flash/files/flash_stats.json')).done(
+            function (meta, flash_latest, flash_stats) {
+                // https://leaflet-extras.github.io/leaflet-providers/preview/
+                let OpenStreetMap_Mapnik = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+                let cfg = {
+                    "radius": 0.2,
+                    "maxOpacity": 0.5,
+                    "minOpacity": 0.0,
+                    "scaleRadius": true,
+                    "useLocalExtrema": true,
+                    latField: 'lat',
+                    lngField: 'lon',
+                    valueField: 'count'
+                };
+
+                /* Generate html code to be added to the <div class="container>
+                   The result should be
+                   <div class="container text-center">
+                      <h1>Lightnings</h1>
+                      <div class='row'>
+                         <div class='col'>
+                            <h4>2023</h4>
+                            <div id='map3" class='map'></div>
+                         </div>
+                         <div class='col'>
+                            <h4>2022</h4>
+                            <div id='map2" class='map'></div>
+                         </div>
+                      </div>
+                      <div class='row'>
+                         <div class='col'>
+                            <h4>2021</h4>
+                            <div id='map1" class='map'></div>
+                         </div>
+                         <div class='col'>
+                            <h4>2020</h4>
+                            <div id='map0" class='map'></div>
+                         </div>
+                      </div>
+                   </div>
+                 */
+
+                let html_txt = "<h1>Lightnings</h1>";
+                html_txt += "<h4>Latest - " + flash_latest[0].date +  " (" + flash_latest[0].data.length + ")" + "</h4>" +
+                    "<div class='row'>" +
+                    "<div class='col'><div id='map_latest' class='map'></div></div></div>";
+
+                let add_closing_div = false;
+                for (let i = meta[0].db_files.length - 1; i >= 0; i--) {
+                    if (i % 2 === 1) {
+                        if (add_closing_div) {
+                            html_txt += "</div>";
+                        }
+                        html_txt += "<div class='row row-cols-2'>";
+                        add_closing_div = true;
+                    }
+                    // Assume str: "static/2020_flash_db.json"
+                    let year = "<h4>" + meta[0].db_files[i].split('/')[1].substring(0, 4) + "</h4>";
+                    html_txt += "<div class='col'>" + year + "<div id='map" + i + "' class='map'></div></div>";
+                }
+                if (add_closing_div) {
+                    html_txt += "</div>";
+                    add_closing_div = false;
+                }
+
+                // Add just after the <div>-container tag
+                $(".container").prepend(html_txt);
+
+                latest_map(flash_latest[0].data, OpenStreetMap_Mapnik);
+
+                // Note, need to add prefix 'flash/' to the filename (fn) to get the path for nginx correct
+                meta[0].db_files.forEach((fn, index) => heatmap('flash/' + fn, index, OpenStreetMap_Mapnik, cfg))
+
+                let flash_series = [];
+                for (let year in flash_stats[0].data) {
+                    let month_series = [];
+                    for (let month in flash_stats[0].data[year]) {
+                        month_series.push(flash_stats[0].data[year][month]);
+                    }
+                    flash_series.push({'name': year, 'data': month_series})
+                }
+
+                Highcharts.chart('chart', {
+                    chart: {type: 'spline'},
+                    title: {text: 'Monthly Lightnings'},
+                    xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
+                    yAxis: {title: {text: 'Number of strikes'}},
+                    plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
+                    series: flash_series,
+                });
+            });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+
+</body>

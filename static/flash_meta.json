@@ -1,0 +1,8 @@
+{
+    "db_files": [
+        "static/2020_flash_db.json",
+        "static/2021_flash_db.json",
+        "static/2022_flash_db.json",
+        "static/2023_flash_db.json"
+    ]
+}

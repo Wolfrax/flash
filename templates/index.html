@@ -26,6 +26,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
 
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+
     <style>
         .map {
             position: relative;
@@ -37,20 +42,30 @@
 </head>
 
 <body>
-
 <div class="container text-center">
     <br><br>
     <hr>
     <br><br>
-    <div id="chart"></div>
+    <div class='row'>
+        <div class='col'>
+            <div id="chart1"></div>
+        </div>
+        <div class='col'>
+            <div id="chart2"></div>
+        </div>
+    </div>
+    <hr>
+    <br><br>
+    <table id="data" class="table table-striped" style="width:100%"></table>
+
+    <br><br>
+    <hr>
+    <footer>
+        <p style="font-size:12px">
+            Copyright (C) Mats Melander
+        </p>
+    </footer>
 </div>
-<br><br>
-<hr>
-<footer>
-    <p style="font-size:12px">
-        Copyright (C) Mats Melander
-    </p>
-</footer>
 
 <script>
     function heatmap(fn, index, map_url, heatmap_cfg) {
@@ -75,8 +90,6 @@
         data.forEach(function (item) {
             L.marker([item.lat, item.lon], {icon: myIcon}).addTo(map);
         });
-
-
     }
 
     $(document).ready(function () {
@@ -127,7 +140,7 @@
                  */
 
                 let html_txt = "<h1>Lightnings</h1>";
-                html_txt += "<h4>Latest - " + flash_latest[0].date +  " (" + flash_latest[0].data.length + ")" + "</h4>" +
+                html_txt += "<h4>Latest - " + flash_latest[0].date + " (" + flash_latest[0].data.length + ")" + "</h4>" +
                     "<div class='row'>" +
                     "<div class='col'><div id='map_latest' class='map'></div></div></div>";
 
@@ -157,22 +170,68 @@
                 // Note, need to add prefix 'flash/' to the filename (fn) to get the path for nginx correct
                 meta[0].db_files.forEach((fn, index) => heatmap('flash/' + fn, index, OpenStreetMap_Mapnik, cfg))
 
-                let flash_series = [];
+                // Reformat information for 2 charts and 1 table
+                let chart1 = [], chart2 = [], table = [];
                 for (let year in flash_stats[0].data) {
-                    let month_series = [];
-                    for (let month in flash_stats[0].data[year]) {
-                        month_series.push(flash_stats[0].data[year][month]);
+                    let months = [];
+                    let row = Array(14).fill('');
+                    let sum = 0, i = 1;
+                    let acc_sum = []
+
+                    row[0] = year;
+                    for (const month in flash_stats[0].data[year]) {
+                        let val = flash_stats[0].data[year][month];
+                        months.push(val);
+                        row[i++] = val.toLocaleString();
+                        sum += val;
+                        acc_sum.push(sum);
                     }
-                    flash_series.push({'name': year, 'data': month_series})
+                    chart1.push({'name': year, 'data': months});
+                    chart2.push({'name': year + ' accumulated', 'data': acc_sum});
+                    row[row.length - 1] = sum.toLocaleString();
+                    table.push(row);
                 }
 
-                Highcharts.chart('chart', {
+                Highcharts.chart('chart1', {
                     chart: {type: 'spline'},
-                    title: {text: 'Monthly Lightnings'},
+                    title: {text: 'Lightnings'},
                     xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
                     yAxis: {title: {text: 'Number of strikes'}},
                     plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
-                    series: flash_series,
+                    series: chart1,
+                });
+
+                Highcharts.chart('chart2', {
+                    chart: {type: 'spline'},
+                    title: {text: 'Lightnings'},
+                    xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
+                    yAxis: {title: {text: 'Number of strikes'}},
+                    plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
+                    series: chart2,
+                });
+
+                $('#data').DataTable({
+                    info: false,
+                    order: [[0, 'desc']],
+                    paging: false,
+                    searching: false,
+                    data: table,
+                    columns: [
+                        {title: 'Year'},
+                        {title: 'Jan'},
+                        {title: 'Feb'},
+                        {title: 'Mar'},
+                        {title: 'Apr'},
+                        {title: 'May'},
+                        {title: 'Jun'},
+                        {title: 'Jul'},
+                        {title: 'Aug'},
+                        {title: 'Sep'},
+                        {title: 'Oct'},
+                        {title: 'Nov'},
+                        {title: 'Dec'},
+                        {title: 'Sum'},
+                    ],
                 });
             });
     });

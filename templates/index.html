@@ -86,7 +86,7 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        let myIcon = L.divIcon({className: 'my-div-icon', html: 'X'});
+        let myIcon = L.divIcon({className: 'my-div-icon', html: '<b style="color:red">X</b>'});
         data.forEach(function (item) {
             L.marker([item.lat, item.lon], {icon: myIcon}).addTo(map);
         });
@@ -179,7 +179,7 @@
                     let acc_sum = []
 
                     row[0] = year;
-                    for (const month in flash_stats[0].data[year]) {
+                    for (let month in flash_stats[0].data[year]) {
                         let val = flash_stats[0].data[year][month];
                         months.push(val);
                         row[i++] = val.toLocaleString();

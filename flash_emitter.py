@@ -19,7 +19,7 @@ class ReverseProxied(object):
 
 
 app = Flask(__name__)
-app.wsgi_app = ReverseProxied(app.wsgi_app, script_name='/lya')
+app.wsgi_app = ReverseProxied(app.wsgi_app, script_name='/flash')
 
 
 @app.route("/", methods=['GET'])
@@ -27,6 +27,8 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/files/<filename>', methods=['GET'])
+@app.route('/flash/<filename>', methods=['GET'])  #Note, used when running flask locally, not on RPi
+@app.route('/flash/static/<filename>', methods=['GET'])  #Note, used when running flask locally, not on RPi
+@app.route('/<filename>', methods=['GET'])
 def download(filename):
     return send_from_directory(directory=os.path.join(app.root_path, 'static'), path=filename)

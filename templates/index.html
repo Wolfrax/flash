@@ -30,6 +30,11 @@
     <script type="text/javascript" charset="utf8"
             src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
 
     <style>
         .map {
@@ -37,38 +42,48 @@
             height: 600px;
             width: 100%;
             background-color: #333;
+            margin-right: 0;
+            margin-left: 0;
         }
     </style>
 </head>
 
 <body>
-<div class="container text-center">
-    <br><br>
-    <hr>
-    <br><br>
-    <div class='row'>
-        <div class='col'>
-            <div id="chart1"></div>
-        </div>
-        <div class='col'>
-            <div id="chart2"></div>
-        </div>
+<div class="container text-center" id="head">
+    <h1>Lightnings</h1>
+    <div class="row">
+        <h4 id="latest_head"></h4>
+        <div id="map_latest" class="col map"></div>
     </div>
-    <hr>
-    <br><br>
-    <table id="data" class="table table-striped" style="width:100%"></table>
+    <div id="maps_by_years" class="row">
+        <div id="maps_col1" class="col"></div>
+        <div id="maps_col2" class="col"></div>
+    </div>
 
-    <br><br>
-    <hr>
-    <footer>
-        <p style="font-size:12px">
-            Copyright (C) Mats Melander
-        </p>
-    </footer>
+    <div class="row"><hr></div>
+
+    <div class="row">
+        <div id="chart1" class="col"></div>
+        <div id="chart2" class="col"></div>
+    </div>
+
+    <div class="row"><hr></div>
+
+    <div class="row">
+        <table id="data" class="col table table-striped" style="width:100%"></table>
+    </div>
+
+    <div class="row"><hr></div>
+
+    <div class="row">
+        <footer>
+            <p style="font-size:12px">Copyright (C) Mats Melander</p>
+        </footer>
+    </div>
 </div>
 
 <script>
-    function heatmap(fn, index, map_url, heatmap_cfg) {
+    function heatmap(fn, year, map_url, heatmap_cfg) {
         $.get(fn).done(function (flash) {
             let heatmapLayer = new HeatmapOverlay(heatmap_cfg);
             let osm = new L.TileLayer(
@@ -76,7 +91,7 @@
                 {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
 
             heatmapLayer.setData(flash);
-            let map = L.map('map' + index, {layers: [osm, heatmapLayer], dragging: false}).setView([62.3, 16.3], 4.5);
+            let map = L.map('map' + year, {layers: [osm, heatmapLayer], dragging: false}).setView([62.3, 16.3], 4.5);
         });
     }
 
@@ -94,13 +109,12 @@
 
     $(document).ready(function () {
         $.when(
-            $.get('flash/files/flash_meta.json'),
-            $.get('flash/files/flash_latest.json'),
-            $.get('flash/files/flash_stats.json')).done(
+            $.get('flash/flash_meta.json'),
+            $.get('flash/flash_latest.json'),
+            $.get('flash/flash_stats.json')).done(
             function (meta, flash_latest, flash_stats) {
                 // https://leaflet-extras.github.io/leaflet-providers/preview/
                 let OpenStreetMap_Mapnik = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-
                 let cfg = {
                     "radius": 0.2,
                     "maxOpacity": 0.5,
@@ -112,63 +126,37 @@
                     valueField: 'count'
                 };
 
-                /* Generate html code to be added to the <div class="container>
-                   The result should be
-                   <div class="container text-center">
-                      <h1>Lightnings</h1>
-                      <div class='row'>
-                         <div class='col'>
-                            <h4>2023</h4>
-                            <div id='map3" class='map'></div>
-                         </div>
-                         <div class='col'>
-                            <h4>2022</h4>
-                            <div id='map2" class='map'></div>
-                         </div>
-                      </div>
-                      <div class='row'>
-                         <div class='col'>
-                            <h4>2021</h4>
-                            <div id='map1" class='map'></div>
-                         </div>
-                         <div class='col'>
-                            <h4>2020</h4>
-                            <div id='map0" class='map'></div>
-                         </div>
-                      </div>
-                   </div>
-                 */
-
-                let html_txt = "<h1>Lightnings</h1>";
-                html_txt += "<h4>Latest - " + flash_latest[0].date + " (" + flash_latest[0].data.length + ")" + "</h4>" +
-                    "<div class='row'>" +
-                    "<div class='col'><div id='map_latest' class='map'></div></div></div>";
-
-                let add_closing_div = false;
-                for (let i = meta[0].db_files.length - 1; i >= 0; i--) {
-                    if (i % 2 === 1) {
-                        if (add_closing_div) {
-                            html_txt += "</div>";
-                        }
-                        html_txt += "<div class='row row-cols-2'>";
-                        add_closing_div = true;
-                    }
-                    // Assume str: "static/2020_flash_db.json"
-                    let year = "<h4>" + meta[0].db_files[i].split('/')[1].substring(0, 4) + "</h4>";
-                    html_txt += "<div class='col'>" + year + "<div id='map" + i + "' class='map'></div></div>";
-                }
-                if (add_closing_div) {
-                    html_txt += "</div>";
-                    add_closing_div = false;
-                }
-
-                // Add just after the <div>-container tag
-                $(".container").prepend(html_txt);
+                d3.select("#latest_head")
+                    .text("Latest " + flash_latest[0].date + " (" + flash_latest[0].data.length + ")");
 
                 latest_map(flash_latest[0].data, OpenStreetMap_Mapnik);
 
+                let even_years = meta[0].db_files.filter( (_, i) => i % 2 === 0 );
+                let odd_years = meta[0].db_files.filter( (_, i) => i % 2 !== 0 );
+                let year = d => d.split('/')[1].substring(0, 4);
+
+                d3.select("#maps_col1")
+                    .selectAll("div")
+                    .data(even_years)
+                    .enter()
+                    .append("h4")
+                    .text(d => year(d))
+                    .append("div")
+                    .attr("id", d => "map" + year(d))
+                    .attr("class", "map");
+
+                d3.select("#maps_col2")
+                    .selectAll("div")
+                    .data(odd_years)
+                    .enter()
+                    .append("h4")
+                    .text(d => year(d))
+                    .append("div")
+                    .attr("id", d => "map" + year(d))
+                    .attr("class", "map")
+
                 // Note, need to add prefix 'flash/' to the filename (fn) to get the path for nginx correct
-                meta[0].db_files.forEach((fn, index) => heatmap('flash/' + fn, index, OpenStreetMap_Mapnik, cfg))
+                meta[0].db_files.forEach(fn => heatmap('flash/' + fn, year(fn), OpenStreetMap_Mapnik, cfg))
 
                 // Reformat information for 2 charts and 1 table
                 let chart1 = [], chart2 = [], table = [];
@@ -203,7 +191,7 @@
 
                 Highcharts.chart('chart2', {
                     chart: {type: 'spline'},
-                    title: {text: 'Lightnings'},
+                    title: {text: 'Lightnings accumulated'},
                     xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
                     yAxis: {title: {text: 'Number of strikes'}},
                     plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
@@ -236,9 +224,5 @@
             });
     });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
-        crossorigin="anonymous"></script>
 
 </body>

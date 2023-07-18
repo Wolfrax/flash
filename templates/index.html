@@ -109,9 +109,9 @@
 
     $(document).ready(function () {
         $.when(
-            $.get('flash/flash_meta.json'),
-            $.get('flash/flash_latest.json'),
-            $.get('flash/flash_stats.json')).done(
+            $.getJSON('flash/flash_meta.json'),
+            $.getJSON('flash/flash_latest.json'),
+            $.getJSON('flash/flash_stats.json')).done(
             function (meta, flash_latest, flash_stats) {
                 // https://leaflet-extras.github.io/leaflet-providers/preview/
                 let OpenStreetMap_Mapnik = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -126,6 +126,7 @@
                     valueField: 'count'
                 };
 
+                console.log(flash_latest);
                 d3.select("#latest_head")
                     .text("Latest " + flash_latest[0].date + " (" + flash_latest[0].data.length + ")");
 

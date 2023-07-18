@@ -4,8 +4,9 @@
 __author__ = 'mm'
 
 
-from flask import Flask, abort, render_template, send_from_directory
+from flask import Flask, abort, render_template, send_from_directory, json, make_response
 import os
+import gzip
 
 
 class ReverseProxied(object):
@@ -31,4 +32,10 @@ def index():
 @app.route('/flash/static/<filename>', methods=['GET'])  #Note, used when running flask locally, not on RPi
 @app.route('/<filename>', methods=['GET'])
 def download(filename):
-    return send_from_directory(directory=os.path.join(app.root_path, 'static'), path=filename)
+    with open(os.path.join(app.root_path, 'static', filename)) as fp:
+        flash_content = json.load(fp)
+        content = gzip.compress(json.dumps(flash_content).encode('utf8'), 5)
+        response = make_response(content)
+        response.headers['Content-length'] = len(content)
+        response.headers['Content-Encoding'] = 'gzip'
+        return response

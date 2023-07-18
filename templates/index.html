@@ -162,7 +162,14 @@
                 // Reformat information for 2 charts and 1 table
                 let chart1 = [], chart2 = [], table = [];
                 for (let year in flash_stats[0].data) {
-                    let months = [];
+                    let months = Array(12).fill('');
+                    // As files are gzip:ed, the order of months received are sorted alphabetically when
+                    // decompressed by jquery (Apr, Aug, ...), we need to restore order. This is done through
+                    // month_index lookup table, so the array months get correct index.
+                    // For example month is "Aug" => index 7, so months[7] = value
+                    const month_index = {
+                        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+                        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11};
                     let row = Array(14).fill('');
                     let sum = 0, i = 1;
                     let acc_sum = []
@@ -170,8 +177,8 @@
                     row[0] = year;
                     for (let month in flash_stats[0].data[year]) {
                         let val = flash_stats[0].data[year][month];
-                        months.push(val);
-                        row[i++] = val.toLocaleString();
+                        months[month_index[month]] = val; // for example, months["Jan"] = 123
+                        row[month_index[month] + 1] = val.toLocaleString();  // Need to adjust index +1 as start element is year
                         sum += val;
                         acc_sum.push(sum);
                     }

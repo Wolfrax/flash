@@ -36,6 +36,11 @@
         integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
         crossorigin="anonymous"></script>
 
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
+
     <style>
         .map {
             position: relative;
@@ -96,6 +101,26 @@
     }
 
     function latest_map(data, map_url) {
+        var tiles = L.tileLayer(map_url, {
+				maxZoom: 18,
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			}),
+			latlng = L.latLng(62.3, 16.3);
+
+		var map = L.map('map_latest', {center: latlng, zoom: 4.5, layers: [tiles]});
+
+		var markers = L.markerClusterGroup();
+
+        data.forEach(function (item) {
+            var marker = L.marker(new L.LatLng(item.lat, item.lon));
+            markers.addLayer(marker);
+        });
+
+		map.addLayer(markers);
+
+        //---------------- OLD
+
+{#
         let map = L.map('map_latest', {dragging: false}).setView([62.3, 16.3], 4.5);
         L.tileLayer(map_url, {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -105,6 +130,7 @@
         data.forEach(function (item) {
             L.marker([item.lat, item.lon], {icon: myIcon}).addTo(map);
         });
+#}
     }
 
     $(document).ready(function () {

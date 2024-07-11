@@ -10,6 +10,7 @@
     <orderEntry type="library" name="heatmapjs" level="application" />
     <orderEntry type="library" name="leaflet-heatmap" level="application" />
     <orderEntry type="library" name="leaflet-boundary-canvas" level="application" />
+    <orderEntry type="library" name="leaflet.markercluster" level="application" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />

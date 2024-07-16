@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heatmap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+    <link rel="shortcut icon" href="https://www.viltstigen.se/favicon.png">
+
+    <script type="text/javascript" charset="utf8" src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+          integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+          crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+            crossorigin=""></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-boundary-canvas@1.0.0/src/BoundaryCanvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+            crossorigin="anonymous"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .leaflet-container {
+            height: 800px;
+            width: 600px;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100vw;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container text-center" id="head">
+    <h1> Lightnings {{ year }}</h1>
+
+    <div class="row">
+        <div id="heatmap" class="col"></div>
+        <div class="col">
+            <div class="row">
+                <div id="chart" class="row">Chart 1</div>
+                <div id="chart_acc" class="row">Chart 2</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const filename = 'flash/{{ year }}_flash_db.json';
+
+        $(document).ready(function () {
+            $.get(filename).done(function (flash) {
+                let heatmapLayer = new HeatmapOverlay({
+                    "radius": 0.2,
+                    "maxOpacity": 0.5,
+                    "minOpacity": 0.0,
+                    "scaleRadius": true,
+                    "useLocalExtrema": true,
+                    latField: 'lat',
+                    lngField: 'lon',
+                    valueField: 'count'
+                });
+                let osm = new L.TileLayer(
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
+                if (typeof flash === 'string') {
+                    // Note running locally, flash variable is of type string, running on RPi it is json
+                    // Possibly, nginx proxy convert this to json before returning?
+                    flash = JSON.parse(flash);
+                }
+                heatmapLayer.setData(flash);
+                let map = L.map('heatmap', {layers: [osm, heatmapLayer], dragging: true}).setView([62.3, 16.3], 5.25);
+            })
+
+            let chart1 = [], chart2 = [];
+            $.getJSON('flash/flash_stats.json').done(
+                function (flash_stats) {
+                    for (let flash_year in flash_stats.data) {
+                        if (flash_year !== "{{ year }}")
+                            continue;
+
+                        let months = Array(12).fill('');
+                        // As files are gzip:ed, the order of months received are sorted alphabetically when
+                        // decompressed by jquery (Apr, Aug, ...), we need to restore order. This is done through
+                        // month_index lookup table, so the array months get correct index.
+                        // For example month is "Aug" => index 7, so months[7] = value
+                        const month_index = {
+                            Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+                            Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+                        };
+                        let sum = 0, i = 1;
+                        let acc_sum = []
+
+                        for (let month in flash_stats.data[flash_year]) {
+                            let val = flash_stats.data[flash_year][month];
+                            months[month_index[month]] = val; // for example, months["Jan"] = 123
+                            sum += val;
+                            acc_sum.push(sum);
+                        }
+                        chart1.push({'name': flash_year, 'data': months});
+                        chart2.push({'name': flash_year + ' accumulated', 'data': acc_sum});
+                    }
+
+                    Highcharts.chart('chart', {
+                        chart: {type: 'spline'},
+                        title: {text: 'Lightnings'},
+                        xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
+                        yAxis: {title: {text: 'Number of strikes'}},
+                        plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
+                        series: chart1,
+                    });
+
+                    Highcharts.chart('chart_acc', {
+                        chart: {type: 'spline'},
+                        title: {text: 'Lightnings accumulated'},
+                        xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
+                        yAxis: {title: {text: 'Number of strikes'}},
+                        plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
+                        series: chart2,
+                    });
+
+                });
+        });
+    </script>
+
+    <div class="row">
+        <footer>
+            <p style="font-size:12px">Copyright (C) Mats Melander</p>
+        </footer>
+    </div>
+
+</div>
+</body>
+</html>

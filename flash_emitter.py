@@ -4,8 +4,8 @@
 __author__ = 'mm'
 
 
-from flask import Flask, abort, render_template, send_from_directory, json, make_response
-import os
+from flask import Flask, abort, render_template, send_from_directory, json, make_response, request
+import glob, os
 import gzip
 
 
@@ -39,3 +39,12 @@ def download(filename):
         response.headers['Content-length'] = len(content)
         response.headers['Content-Encoding'] = 'gzip'
         return response
+
+@app.route("/heatmap", methods=['GET'])
+def heat():
+    year = request.args.get('year')
+    db_file = glob.glob(os.path.join(app.root_path, 'static', year + '_flash_db.json'))
+    if db_file:
+        return render_template('heatmap.html', year=year)
+    else:
+        abort(404)

@@ -60,10 +60,6 @@
         <h4 id="latest_head"></h4>
         <div id="map_latest" class="col map"></div>
     </div>
-    <div id="maps_by_years" class="row">
-        <div id="maps_col1" class="col"></div>
-        <div id="maps_col2" class="col"></div>
-    </div>
 
     <div class="row"><hr></div>
 
@@ -88,28 +84,15 @@
 </div>
 
 <script>
-    function heatmap(fn, year, map_url, heatmap_cfg) {
-        $.get(fn).done(function (flash) {
-            let heatmapLayer = new HeatmapOverlay(heatmap_cfg);
-            let osm = new L.TileLayer(
-                map_url,
-                {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
-
-            heatmapLayer.setData(flash);
-            let map = L.map('map' + year, {layers: [osm, heatmapLayer], dragging: false}).setView([62.3, 16.3], 4.5);
-        });
-    }
-
     function latest_map(data, map_url) {
-        var tiles = L.tileLayer(map_url, {
-				maxZoom: 18,
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-			}),
-			latlng = L.latLng(62.3, 16.3);
+        const tiles = L.tileLayer(map_url, {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }),
+            latlng = L.latLng(62.3, 16.3);
 
-		var map = L.map('map_latest', {center: latlng, zoom: 4.5, layers: [tiles]});
-
-		var markers = L.markerClusterGroup();
+        const map = L.map('map_latest', {center: latlng, zoom: 4.5, layers: [tiles]});
+        const markers = L.markerClusterGroup();
 
         data.forEach(function (item) {
             var marker = L.marker(new L.LatLng(item.lat, item.lon));
@@ -117,20 +100,6 @@
         });
 
 		map.addLayer(markers);
-
-        //---------------- OLD
-
-{#
-        let map = L.map('map_latest', {dragging: false}).setView([62.3, 16.3], 4.5);
-        L.tileLayer(map_url, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        let myIcon = L.divIcon({className: 'my-div-icon', html: '<b style="color:red">X</b>'});
-        data.forEach(function (item) {
-            L.marker([item.lat, item.lon], {icon: myIcon}).addTo(map);
-        });
-#}
     }
 
     $(document).ready(function () {
@@ -158,32 +127,7 @@
 
                 latest_map(flash_latest[0].data, OpenStreetMap_Mapnik);
 
-                let even_years = meta[0].db_files.filter( (_, i) => i % 2 === 0 );
-                let odd_years = meta[0].db_files.filter( (_, i) => i % 2 !== 0 );
-                let year = d => d.split('/')[1].substring(0, 4);
-
-                d3.select("#maps_col1")
-                    .selectAll("div")
-                    .data(even_years)
-                    .enter()
-                    .append("h4")
-                    .text(d => year(d))
-                    .append("div")
-                    .attr("id", d => "map" + year(d))
-                    .attr("class", "map");
-
-                d3.select("#maps_col2")
-                    .selectAll("div")
-                    .data(odd_years)
-                    .enter()
-                    .append("h4")
-                    .text(d => year(d))
-                    .append("div")
-                    .attr("id", d => "map" + year(d))
-                    .attr("class", "map")
-
-                // Note, need to add prefix 'flash/' to the filename (fn) to get the path for nginx correct
-                meta[0].db_files.forEach(fn => heatmap('flash/' + fn, year(fn), OpenStreetMap_Mapnik, cfg))
+                const nr_of_years = Object.keys(flash_stats[0].data).length;
 
                 // Reformat information for 2 charts and 1 table
                 let chart1 = [], chart2 = [], table = [];
@@ -200,7 +144,7 @@
                     let sum = 0, i = 1;
                     let acc_sum = []
 
-                    row[0] = year;
+                    row[0] = '<a href=flash/heatmap?year='+year+'>'+year+'</a>'
                     for (let month in flash_stats[0].data[year]) {
                         let val = flash_stats[0].data[year][month];
                         months[month_index[month]] = val; // for example, months["Jan"] = 123
@@ -208,15 +152,17 @@
                         sum += val;
                         acc_sum.push(sum);
                     }
-                    chart1.push({'name': year, 'data': months});
-                    chart2.push({'name': year + ' accumulated', 'data': acc_sum});
+                    if (nr_of_years - table.length <= 3) {  // Only chart last 3 years
+                        chart1.push({'name': year, 'data': months});
+                        chart2.push({'name': year + ' accumulated', 'data': acc_sum});
+                    }
                     row[row.length - 1] = sum.toLocaleString();
                     table.push(row);
                 }
 
                 Highcharts.chart('chart1', {
                     chart: {type: 'spline'},
-                    title: {text: 'Lightnings'},
+                    title: {text: 'Lightnings (3 years)'},
                     xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
                     yAxis: {title: {text: 'Number of strikes'}},
                     plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
@@ -225,7 +171,7 @@
 
                 Highcharts.chart('chart2', {
                     chart: {type: 'spline'},
-                    title: {text: 'Lightnings accumulated'},
+                    title: {text: 'Lightnings accumulated (3 years)'},
                     xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
                     yAxis: {title: {text: 'Number of strikes'}},
                     plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},

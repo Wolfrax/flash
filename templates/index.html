@@ -41,14 +41,17 @@
 
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
 
-    <style>
-        .map {
-            position: relative;
-            height: 600px;
-            width: 100%;
-            background-color: #333;
-            margin-right: 0;
-            margin-left: 0;
+     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .leaflet-container {
+            height: 800px;
+            width: 600px;
+            max-width: 100%;
+            max-height: 100%;
         }
     </style>
 </head>
@@ -56,16 +59,16 @@
 <body>
 <div class="container text-center" id="head">
     <h1>Lightnings</h1>
+
     <div class="row">
         <h4 id="latest_head"></h4>
-        <div id="map_latest" class="col map"></div>
-    </div>
-
-    <div class="row"><hr></div>
-
-    <div class="row">
-        <div id="chart1" class="col"></div>
-        <div id="chart2" class="col"></div>
+        <div id="map_latest" class="col"></div>
+        <div class="col">
+            <div class="row">
+                <div id="chart1" class="row">Chart 1</div>
+                <div id="chart2" class="row">Chart 2</div>
+            </div>
+        </div>
     </div>
 
     <div class="row"><hr></div>

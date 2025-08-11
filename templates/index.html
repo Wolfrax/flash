@@ -133,6 +133,8 @@
 
                 // Reformat information for 2 charts and 1 table
                 let chart1 = [], chart2 = [], table = [];
+                const now = new Date();
+                const currentMonthIndex = now.getMonth(); // 0-based: Jan=0, Feb=1, ...
                 for (let year in flash_stats[0].data) {
                     let months = Array(12).fill('');
                     // As files are gzip:ed, the order of months received are sorted alphabetically when
@@ -147,13 +149,35 @@
                     let acc_sum = []
 
                     row[0] = '<a href=flash/heatmap?year='+year+'>'+year+'</a>'
-                    for (let month in flash_stats[0].data[year]) {
-                        let val = flash_stats[0].data[year][month];
-                        months[month_index[month]] = val; // for example, months["Jan"] = 123
-                        row[month_index[month] + 1] = val.toLocaleString();  // Need to adjust index +1 as start element is year
-                        sum += val;
-                        acc_sum.push(sum);
+                    for (let m = 0; m < 12; m++) {
+                        // Get month name from index
+                        const monthNames = Object.keys(month_index);
+                        const monthName = monthNames[m];
+                        let val = flash_stats[0].data[year][monthName];
+                        // If month is before current month and no value from server, show zero
+                        if (m < currentMonthIndex && (val === undefined || val === null)) {
+                            val = 0;
+                        }
+                        // If value exists, use it
+                        if (val !== undefined && val !== null) {
+                            months[m] = val;
+                            row[m + 1] = val.toLocaleString();
+                            sum += val;
+                            acc_sum.push(sum);
+                        } else {
+                            months[m] = '';
+                            row[m + 1] = '';
+                        }
                     }
+
+                    //for (let month in flash_stats[0].data[year]) {
+                    //    let val = flash_stats[0].data[year][month];
+                    //    months[month_index[month]] = val; // for example, months["Jan"] = 123
+                    //    row[month_index[month] + 1] = val.toLocaleString();  // Need to adjust index +1 as start element is year
+                    //    sum += val;
+                    //    acc_sum.push(sum);
+                    //}
+
                     if (nr_of_years - table.length <= 3) {  // Only chart last 3 years
                         chart1.push({'name': year, 'data': months});
                         chart2.push({'name': year + ' accumulated', 'data': acc_sum});

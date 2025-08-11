@@ -1,7 +1,7 @@
 
 # Flash
 
-Flash is a web application that visualizes lightning data for Sweden from [https://www.smhi.se/](SMHI) using interactive maps and charts.
+Flash is a web application that visualizes lightning data for Sweden from [SMHI](https://www.smhi.se/) using interactive maps and charts.
 An heatmap for each year is generated.
 
 ## Features
@@ -54,7 +54,7 @@ The application will be available at [http://127.0.0.1:5000](http://127.0.0.1:50
 ## Data
 
 Lightning data is fetched from [https://www.smhi.se/data](SMHI) and stored in JSON files in the `static` directory.
-An example of usage is available at [https://www.viltstigen.se/flash](Vilststigen).
+An example of usage is available at [Vilststigen](https://www.viltstigen.se/flash).
 
 ## Notes
 
@@ -67,4 +67,4 @@ MIT License
 
 ## Author
 
-Mats Melander
+Mats Melander (C)

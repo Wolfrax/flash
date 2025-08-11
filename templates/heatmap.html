@@ -101,14 +101,20 @@
                             Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
                             Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
                         };
-                        let sum = 0, i = 1;
-                        let acc_sum = []
+                        let sum = 0;
+                        let acc_sum = Array(12).fill(0);
 
-                        for (let month in flash_stats.data[flash_year]) {
-                            let val = flash_stats.data[flash_year][month];
-                            months[month_index[month]] = val; // for example, months["Jan"] = 123
+                        // Fill months and acc_sum correctly, handling missing months
+                        for (let m = 0; m < 12; m++) {
+                            const monthNames = Object.keys(month_index);
+                            const monthName = monthNames[m];
+                            let val = flash_stats.data[flash_year][monthName];
+                            if (val === undefined || val === null) {
+                                val = 0;
+                            }
+                            months[m] = val;
                             sum += val;
-                            acc_sum.push(sum);
+                            acc_sum[m] = sum;
                         }
                         chart1.push({'name': flash_year, 'data': months});
                         chart2.push({'name': flash_year + ' accumulated', 'data': acc_sum});

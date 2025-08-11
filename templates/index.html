@@ -170,14 +170,6 @@
                         }
                     }
 
-                    //for (let month in flash_stats[0].data[year]) {
-                    //    let val = flash_stats[0].data[year][month];
-                    //    months[month_index[month]] = val; // for example, months["Jan"] = 123
-                    //    row[month_index[month] + 1] = val.toLocaleString();  // Need to adjust index +1 as start element is year
-                    //    sum += val;
-                    //    acc_sum.push(sum);
-                    //}
-
                     if (nr_of_years - table.length <= 3) {  // Only chart last 3 years
                         chart1.push({'name': year, 'data': months});
                         chart2.push({'name': year + ' accumulated', 'data': acc_sum});

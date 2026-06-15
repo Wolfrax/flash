@@ -1,226 +1,565 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Flash</title>
-
-    <link rel="shortcut icon" href="https://www.viltstigen.se/favicon.png">
-
-    <script type="text/javascript" charset="utf8" src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-          integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
-          crossorigin=""/>
-
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
-            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
-            crossorigin=""></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-boundary-canvas@1.0.0/src/BoundaryCanvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
-    <!-- Latest DataTables with Bootstrap 5 integration from CDN -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.css"/>
-    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.js"></script>
-
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
-
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-
-        .leaflet-container {
-            height: 800px;
-            width: 600px;
-            max-width: 100%;
-            max-height: 100%;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>&#9889; Blixtslag</title>
+<link rel="shortcut icon" href="https://www.viltstigen.se/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.2.0/highcharts.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<style>
+:root {
+  --bg:          #f0f4f8;
+  --surface:     #ffffff;
+  --card:        #ffffff;
+  --border:      #dde3ed;
+  --accent:      #2563eb;
+  --accent-dim:  rgba(37,99,235,0.10);
+  --accent-glow: rgba(37,99,235,0.25);
+  --text:        #0f172a;
+  --muted:       #64748b;
+  --shadow:      0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --radius:      10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Exo 2", sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(rgba(37,99,235,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--text);
+  min-height: 100vh;
+}
+/* NAV */
+.nav {
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem; height: 52px;
+  display: flex; align-items: center; gap: 1.25rem;
+  position: sticky; top: 0; z-index: 1000;
+  box-shadow: var(--shadow);
+}
+.nav-brand {
+  font-family: "Anton", sans-serif; font-size: 1.35rem;
+  letter-spacing: .06em; color: var(--accent);
+  display: flex; align-items: center; gap: .3rem;
+  text-shadow: 0 0 16px var(--accent-glow);
+}
+.bolt-anim { display: inline-block; animation: bolt 5s infinite; }
+@keyframes bolt {
+  0%,82%,100% { opacity:1; filter: drop-shadow(0 0 5px var(--accent)); }
+  84%,90%     { opacity:.1; }
+  86%,92%     { opacity:1; filter: drop-shadow(0 0 12px var(--accent)); }
+}
+.nav-sub {
+  font-family: "Share Tech Mono", monospace; font-size: .62rem;
+  color: var(--muted); letter-spacing: .14em;
+  border-left: 1px solid var(--border); padding-left: 1.25rem;
+}
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 1.5rem; }
+.live-indicator {
+  font-family: "Share Tech Mono", monospace; font-size: .62rem;
+  color: #16a34a; letter-spacing: .1em;
+  display: flex; align-items: center; gap: .45rem;
+}
+.live-indicator::before {
+  content: ""; width: 6px; height: 6px;
+  background: #16a34a; border-radius: 50%; animation: live 2s infinite;
+}
+@keyframes live {
+  0%,100% { box-shadow: 0 0 0 0 rgba(22,163,74,.7); }
+  70%     { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+}
+.nav-date { font-family: "Share Tech Mono", monospace; font-size: .68rem; color: var(--muted); }
+/* PAGE */
+.page { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
+/* HERO */
+.hero-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 960px) { .hero-stats { grid-template-columns: repeat(2,1fr); } }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-top: 2px solid var(--accent); border-radius: var(--radius);
+  padding: 1.2rem 1.4rem; position: relative; overflow: hidden;
+  box-shadow: var(--shadow); transition: box-shadow .2s;
+}
+.stat-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 10% 0%, var(--accent-dim), transparent 55%);
+  pointer-events: none;
+}
+.stat-card:hover { box-shadow: 0 0 0 3px var(--accent-dim), var(--shadow); }
+.stat-emoji { position: absolute; top: 1rem; right: 1.2rem; font-size: 1.6rem; opacity: .18; }
+.stat-label { font-family: "Share Tech Mono", monospace; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .45rem; }
+.stat-value { font-family: "Anton", sans-serif; font-size: 2.6rem; line-height: 1; color: var(--accent); }
+.stat-sub   { font-size: .7rem; color: var(--muted); margin-top: .35rem; font-family: "Share Tech Mono", monospace; }
+/* MAIN GRID */
+.main-grid { display: grid; grid-template-columns: 400px 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+@media (max-width: 1050px) { .main-grid { grid-template-columns: 1fr; } }
+/* MAP PANEL */
+.map-panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: var(--shadow);
+}
+.panel-header {
+  padding: .65rem 1rem; border-bottom: 1px solid var(--border);
+  background: var(--surface); display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0;
+}
+.panel-label { font-family: "Share Tech Mono", monospace; font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+.mode-btns { display: flex; gap: 4px; }
+.mode-btn {
+  font-family: "Share Tech Mono", monospace; font-size: .62rem; letter-spacing: .06em;
+  padding: .22rem .65rem; border-radius: 5px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.mode-btn:hover  { color: var(--text); border-color: var(--muted); }
+.mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+#map { flex: 1; min-height: 510px; }
+.panel-footer {
+  padding: .45rem 1rem; border-top: 1px solid var(--border);
+  background: var(--surface); display: flex;
+  justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.map-source { font-family: "Share Tech Mono", monospace; font-size: .6rem; color: var(--muted); }
+.map-count  { font-family: "Anton", sans-serif; font-size: 1.05rem; color: var(--accent); }
+/* CHART PANEL */
+.chart-panel { display: flex; flex-direction: column; gap: 1rem; }
+.year-bar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem 1rem; box-shadow: var(--shadow); }
+.year-bar-label { font-family: "Share Tech Mono", monospace; font-size: .6rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .6rem; }
+.year-pills {
+  display: flex; gap: 5px; flex-wrap: nowrap;
+  overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.year-pills::-webkit-scrollbar       { height: 3px; }
+.year-pills::-webkit-scrollbar-track { background: transparent; }
+.year-pills::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.year-pill {
+  font-family: "Anton", sans-serif; font-size: .95rem; letter-spacing: .04em;
+  padding: .28rem .9rem; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: all .15s; flex-shrink: 0;
+}
+.year-pill:hover  { color: var(--text); border-color: var(--muted); }
+.year-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 14px var(--accent-glow); }
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex: 1; box-shadow: var(--shadow); }
+.chart-card-header { padding: .6rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+.chart-card-title { font-family: "Share Tech Mono", monospace; font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+/* TABLE */
+.table-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+.table-wrapper { overflow-x: auto; }
+table.htable { width: 100%; border-collapse: collapse; font-family: "Share Tech Mono", monospace; font-size: .72rem; }
+.htable th { padding: .5rem .7rem; text-align: right; color: var(--muted); font-weight: 400; letter-spacing: .06em; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface); }
+.htable th:first-child { text-align: left; }
+.htable td { padding: .48rem .7rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--text); }
+.htable td:first-child { text-align: left; font-family: "Anton", sans-serif; font-size: 1.05rem; color: var(--accent); cursor: pointer; }
+.htable td:first-child:hover { text-decoration: underline; }
+.htable tr:last-child td { border-bottom: none; }
+.htable tr:hover td { background: var(--accent-dim); }
+.htable td.peak   { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+.htable td.absent { color: var(--border); }
+.htable td.sum    { border-left: 1px solid var(--border); font-weight: 600; }
+/* FOOTER */
+footer { text-align: center; padding: 1.5rem; font-family: "Share Tech Mono", monospace; font-size: .6rem; color: var(--muted); letter-spacing: .1em; border-top: 1px solid var(--border); }
+footer a { color: var(--muted); }
+/* Leaflet */
+.leaflet-tooltip {
+  background: var(--card) !important; border: 1px solid var(--border) !important;
+  color: var(--text) !important; border-radius: 6px !important;
+  font-family: "Share Tech Mono", monospace !important; font-size: .7rem !important;
+  box-shadow: var(--shadow) !important; padding: .5rem .75rem !important;
+}
+.leaflet-tooltip::before { border-top-color: var(--border) !important; }
+.leaflet-control-attribution { background: rgba(255,255,255,0.85) !important; color: var(--muted) !important; font-size: .55rem !important; }
+.leaflet-control-zoom a { background: var(--card) !important; color: var(--text) !important; border-color: var(--border) !important; }
+</style>
 </head>
-
 <body>
-<div class="container text-center" id="head">
-    <h1>Lightnings</h1>
 
-    <div class="row">
-        <h4 id="latest_head"></h4>
-        <!-- Map on the left, charts stacked vertically on the right -->
-        <div class="col-lg-6">
-            <div id="map_latest"></div>
+<nav class="nav">
+  <div class="nav-brand"><span class="bolt-anim">&#9889;</span> BLIXTSLAG</div>
+  <span class="nav-sub">SWEDEN LIGHTNING MONITOR</span>
+  <div class="nav-right">
+    <span class="live-indicator">SMHI DATA</span>
+    <span class="nav-date" id="nav-date">—</span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-emoji">&#9889;</div>
+      <div class="stat-label">Yesterday's strikes</div>
+      <div class="stat-value" id="stat-yesterday">—</div>
+      <div class="stat-sub"   id="stat-yesterday-sub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">&#128197;</div>
+      <div class="stat-label" id="stat-ytd-label">This year (YTD)</div>
+      <div class="stat-value" id="stat-ytd">—</div>
+      <div class="stat-sub">Jan – present</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">&#127942;</div>
+      <div class="stat-label">Peak month on record</div>
+      <div class="stat-value" id="stat-peak">—</div>
+      <div class="stat-sub"   id="stat-peak-sub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">&#128081;</div>
+      <div class="stat-label">Record year</div>
+      <div class="stat-value" id="stat-record">—</div>
+      <div class="stat-sub"   id="stat-record-sub">—</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="map-panel">
+      <div class="panel-header">
+        <span class="panel-label" id="map-panel-label">Yesterday's strikes</span>
+        <div class="mode-btns">
+          <button class="mode-btn active" id="btn-strikes" onclick="setMapMode('strikes')">&#9889; Strikes</button>
+          <button class="mode-btn"        id="btn-heatmap" onclick="setMapMode('heatmap')">Heatmap</button>
         </div>
-        <div class="col-lg-6 d-flex flex-column justify-content-center align-items-center">
-            <div id="chart1" class="mb-3 w-100"></div>
-            <div id="chart2" class="w-100"></div>
+      </div>
+      <div id="map"></div>
+      <div class="panel-footer">
+        <span class="map-source">SMHI &#183; &#169; OpenStreetMap &#183; CARTO &#8212; click dot to zoom</span>
+        <span class="map-count" id="map-count-label">—</span>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="year-bar">
+        <div class="year-bar-label">Select year &#8212; updates heatmap</div>
+        <div class="year-pills" id="year-pills"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Monthly strikes &#8212; last 3 years</div>
         </div>
+        <div id="chart-monthly" style="height:220px;padding:.5rem;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Accumulated strikes &#8212; last 3 years</div>
+        </div>
+        <div id="chart-acc" style="height:220px;padding:.5rem;"></div>
+      </div>
     </div>
 
-    <div class="row"><hr></div>
+  </div>
 
-    <div class="row">
-        <table id="data" class="col table table-striped" style="width:100%"></table>
+  <div class="table-section">
+    <div class="panel-header">
+      <span class="panel-label">Historical monthly breakdown &#8212; all years</span>
     </div>
-
-    <div class="row"><hr></div>
-
-    <div class="row">
-        <footer>
-            <p style="font-size:12px">Copyright (C) Mats Melander</p>
-        </footer>
+    <div class="table-wrapper">
+      <table class="htable" id="htable"></table>
     </div>
+  </div>
+
 </div>
 
+<footer>
+  Copyright &copy; Mats Melander &nbsp;&#183;&nbsp;
+  Data: <a href="https://www.smhi.se/">SMHI</a> open data &nbsp;&#183;&nbsp;
+  Published under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>
+</footer>
+
 <script>
-    function latest_map(data, map_url) {
-        const tiles = L.tileLayer(map_url, {
-                maxZoom: 18,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }),
-            latlng = L.latLng(62.3, 16.3);
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var map, strikesLayer, heatOverlay;
+var cMonthly, cAcc;
+var activeYear = "";
+var currentMapMode = "strikes";
+var heatCache = {};
+var HOME = [62, 16], HOME_ZOOM = 4;
+var PALETTE = ["#2563eb", "#f97316", "#16a34a"];
 
-        const map = L.map('map_latest', {center: latlng, zoom: 4.5, layers: [tiles]});
-        const markers = L.markerClusterGroup();
-
-        data.forEach(function (item) {
-            var marker = L.marker(new L.LatLng(item.lat, item.lon));
-            markers.addLayer(marker);
-        });
-
-        map.addLayer(markers);
-    }
-
-    $(document).ready(function () {
-        $.when(
-            $.getJSON('flash/flash_meta.json'),
-            $.getJSON('flash/flash_latest.json'),
-            $.getJSON('flash/flash_stats.json')).done(
-            function (meta, flash_latest, flash_stats) {
-                // https://leaflet-extras.github.io/leaflet-providers/preview/
-                let OpenStreetMap_Mapnik = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-                let cfg = {
-                    "radius": 0.2,
-                    "maxOpacity": 0.5,
-                    "minOpacity": 0.0,
-                    "scaleRadius": true,
-                    "useLocalExtrema": true,
-                    latField: 'lat',
-                    lngField: 'lon',
-                    valueField: 'count'
-                };
-
-                console.log(flash_latest);
-                d3.select("#latest_head")
-                    .text("Latest " + flash_latest[0].date + " (" + flash_latest[0].data.length + ")");
-
-                latest_map(flash_latest[0].data, OpenStreetMap_Mapnik);
-
-                const nr_of_years = Object.keys(flash_stats[0].data).length;
-
-                // Reformat information for 2 charts and 1 table
-                let chart1 = [], chart2 = [], table = [];
-                const now = new Date();
-                const currentMonthIndex = now.getMonth(); // 0-based: Jan=0, Feb=1, ...
-                for (let year in flash_stats[0].data) {
-                    let months = Array(12).fill('');
-                    // As files are gzip:ed, the order of months received are sorted alphabetically when
-                    // decompressed by jquery (Apr, Aug, ...), we need to restore order. This is done through
-                    // month_index lookup table, so the array months get correct index.
-                    // For example month is "Aug" => index 7, so months[7] = value
-                    const month_index = {
-                        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-                        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11};
-                    let row = Array(14).fill('');
-                    let sum = 0, i = 1;
-                    let acc_sum = []
-
-                    row[0] = '<a href=flash/heatmap?year='+year+'>'+year+'</a>'
-                    for (let m = 0; m < 12; m++) {
-                        // Get month name from index
-                        const monthNames = Object.keys(month_index);
-                        const monthName = monthNames[m];
-                        let val = flash_stats[0].data[year][monthName];
-                        // If month is before current month and no value from server, show zero
-                        if (m < currentMonthIndex && (val === undefined || val === null)) {
-                            val = 0;
-                        }
-                        // If value exists, use it
-                        if (val !== undefined && val !== null) {
-                            months[m] = val;
-                            row[m + 1] = val.toLocaleString();
-                            sum += val;
-                            acc_sum.push(sum);
-                        } else {
-                            months[m] = '';
-                            row[m + 1] = '';
-                        }
-                    }
-
-                    if (nr_of_years - table.length <= 3) {  // Only chart last 3 years
-                        chart1.push({'name': year, 'data': months});
-                        chart2.push({'name': year + ' accumulated', 'data': acc_sum});
-                    }
-                    row[row.length - 1] = sum.toLocaleString();
-                    table.push(row);
-                }
-
-                Highcharts.chart('chart1', {
-                    chart: {type: 'spline'},
-                    title: {text: 'Lightnings (3 years)'},
-                    xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
-                    yAxis: {title: {text: 'Number of strikes'}},
-                    plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
-                    series: chart1,
-                });
-
-                Highcharts.chart('chart2', {
-                    chart: {type: 'spline'},
-                    title: {text: 'Lightnings accumulated (3 years)'},
-                    xAxis: {categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
-                    yAxis: {title: {text: 'Number of strikes'}},
-                    plotOptions: {line: {dataLabels: {enabled: false}, enableMouseTracking: true}},
-                    series: chart2,
-                });
-
-                $('#data').DataTable({
-                    info: false,
-                    order: [[0, 'desc']],
-                    paging: false,
-                    searching: false,
-                    data: table,
-                    columns: [
-                        {title: 'Year'},
-                        {title: 'Jan'},
-                        {title: 'Feb'},
-                        {title: 'Mar'},
-                        {title: 'Apr'},
-                        {title: 'May'},
-                        {title: 'Jun'},
-                        {title: 'Jul'},
-                        {title: 'Aug'},
-                        {title: 'Sep'},
-                        {title: 'Oct'},
-                        {title: 'Nov'},
-                        {title: 'Dec'},
-                        {title: 'Sum'},
-                    ],
-                });
-            });
+// ── INIT ─────────────────────────────────────────────────────────────
+$(document).ready(function() {
+    $.when(
+        $.getJSON("flash/flash_stats.json"),
+        $.getJSON("flash/flash_latest.json")
+    ).done(function(statsRes, latestRes) {
+        var stats  = statsRes[0].data;
+        var latest = latestRes[0];
+        initHero(stats, latest);
+        initMap(latest);
+        initYearPills(stats);
+        buildCharts(stats);
+        buildTable(stats);
     });
-</script>
+});
 
+// ── HERO CARDS ────────────────────────────────────────────────────────
+function initHero(stats, latest) {
+    var latestDate  = latest.date.substring(0, 10);
+    var latestCount = latest.data.length;
+    document.getElementById("nav-date").textContent          = latestDate;
+    document.getElementById("stat-yesterday-sub").textContent = latestDate;
+
+    var allYears = Object.keys(stats).sort(function(a,b){ return +a - +b; });
+    activeYear = allYears[allYears.length - 1];
+
+    document.getElementById("stat-ytd-label").textContent = activeYear + " total (YTD)";
+
+    var ytdTotal = Object.values(stats[activeYear]).reduce(function(s,v){ return s+(v||0); }, 0);
+
+    var peakVal = 0, peakLabel = "";
+    var recordYear = "", recordTotal = 0;
+    allYears.forEach(function(y) {
+        var t = 0;
+        MONTHS.forEach(function(m) {
+            var v = stats[y][m] || 0;
+            t += v;
+            if (v > peakVal) { peakVal = v; peakLabel = m + " " + y; }
+        });
+        if (t > recordTotal) { recordTotal = t; recordYear = y; }
+    });
+
+    document.getElementById("stat-record-sub").textContent = recordYear + " — all time high";
+    document.getElementById("stat-peak-sub").textContent   = peakLabel;
+
+    countUp(document.getElementById("stat-yesterday"), latestCount, 900, 0);
+    countUp(document.getElementById("stat-ytd"),       ytdTotal,    900, 120);
+    countUp(document.getElementById("stat-peak"),      peakVal,     900, 240);
+    countUp(document.getElementById("stat-record"),    recordTotal, 900, 360);
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────
+function initMap(latest) {
+    var tiles = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        { attribution: "&#169; OpenStreetMap &#169; CARTO", subdomains: "abcd", maxZoom: 18 }
+    );
+    map = L.map("map", { center: HOME, zoom: HOME_ZOOM, layers: [tiles] });
+
+    heatOverlay = new HeatmapOverlay({
+        "radius": 0.2, "maxOpacity": 0.5, "minOpacity": 0.0,
+        "scaleRadius": true, "useLocalExtrema": true,
+        latField: "lat", lngField: "lon", valueField: "count"
+    });
+
+    // Group strikes by location
+    var groups = {};
+    latest.data.forEach(function(p) {
+        var key = p.lat + "," + p.lon;
+        if (groups[key]) groups[key].count++;
+        else groups[key] = { lat: p.lat, lon: p.lon, count: 1 };
+    });
+
+    strikesLayer = L.layerGroup();
+    var totalStrikes = latest.data.length;
+    Object.values(groups).forEach(function(g) {
+        var radius = Math.max(4, Math.min(10, 3 + Math.sqrt(g.count)));
+        var m = L.circleMarker([g.lat, g.lon], {
+            radius: radius, fillColor: "#2563eb",
+            color: "rgba(37,99,235,0.20)", weight: 8, opacity: 0.5, fillOpacity: 1
+        });
+        m.bindTooltip(
+            "<div style='line-height:1.65'>" +
+            "<strong>&#9889; " + g.count + " strike" + (g.count > 1 ? "s" : "") + " here</strong><br>" +
+            "Lat: " + g.lat.toFixed(2) + "&#176;N &nbsp; Lon: " + g.lon.toFixed(2) + "&#176;E<br>" +
+            "<span style='opacity:.6;font-size:.65rem'>" + latest.date.substring(0,10) + " — click to zoom</span>" +
+            "</div>",
+            { direction: "top", offset: L.point(0, -8) }
+        );
+        m.on("click", function() { map.flyTo([g.lat, g.lon], 10, { animate: true, duration: 0.7 }); });
+        m.addTo(strikesLayer);
+    });
+    strikesLayer.addTo(map);
+    map.on("dblclick", function() { map.flyTo(HOME, HOME_ZOOM, { animate: true, duration: 0.8 }); });
+
+    document.getElementById("map-count-label").textContent = totalStrikes.toLocaleString() + " strikes";
+}
+
+// ── YEAR PILLS ────────────────────────────────────────────────────────
+function initYearPills(stats) {
+    var allYears = Object.keys(stats).sort(function(a,b){ return +a - +b; });
+    var container = document.getElementById("year-pills");
+    allYears.forEach(function(y) {
+        var btn = document.createElement("button");
+        btn.className = "year-pill" + (y === activeYear ? " active" : "");
+        btn.textContent = y;
+        btn.onclick = function() { selectYear(y, btn); };
+        container.appendChild(btn);
+    });
+}
+
+function selectYear(year, el) {
+    activeYear = year;
+    document.querySelectorAll(".year-pill").forEach(function(p) { p.classList.remove("active"); });
+    el.classList.add("active");
+    if (currentMapMode === "heatmap") {
+        loadHeatmap(year);
+        document.getElementById("map-panel-label").textContent = "Heatmap — " + year;
+    }
+}
+
+// ── HEATMAP ───────────────────────────────────────────────────────────
+function loadHeatmap(year) {
+    if (heatCache[year]) {
+        heatOverlay.setData(heatCache[year]);
+        var total = heatCache[year].data.reduce(function(s,p){ return s+p.count; }, 0);
+        document.getElementById("map-count-label").textContent = total.toLocaleString() + " strikes";
+        return;
+    }
+    $.getJSON("flash/" + year + "_flash_db.json").done(function(data) {
+        heatCache[year] = data;
+        heatOverlay.setData(data);
+        var total = data.data.reduce(function(s,p){ return s+p.count; }, 0);
+        document.getElementById("map-count-label").textContent = total.toLocaleString() + " strikes";
+    });
+}
+
+function setMapMode(mode) {
+    currentMapMode = mode;
+    document.getElementById("btn-strikes").classList.toggle("active", mode === "strikes");
+    document.getElementById("btn-heatmap").classList.toggle("active", mode === "heatmap");
+    if (mode === "strikes") {
+        map.removeLayer(heatOverlay);
+        strikesLayer.addTo(map);
+        document.getElementById("map-panel-label").textContent = "Yesterday's strikes";
+        var totalStrikes = 0;
+        strikesLayer.eachLayer(function() { totalStrikes++; });
+        // Re-read count from footer (simpler: just restore)
+        document.getElementById("map-count-label").textContent =
+            document.getElementById("map-count-label").dataset.total || "—";
+    } else {
+        map.removeLayer(strikesLayer);
+        heatOverlay.addTo(map);
+        loadHeatmap(activeYear);
+        document.getElementById("map-panel-label").textContent = "Heatmap — " + activeYear;
+    }
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────────
+function buildCharts(stats) {
+    if (cMonthly) cMonthly.destroy();
+    if (cAcc)     cAcc.destroy();
+
+    var allYears  = Object.keys(stats).sort(function(a,b){ return +a - +b; });
+    var showYears = allYears.slice(-3);
+    var mSeries = [], aSeries = [];
+
+    showYears.forEach(function(y, i) {
+        var d = stats[y] || {};
+        var monthly = MONTHS.map(function(m) { return d[m] != null ? d[m] : null; });
+        var acc = [], sum = 0;
+        monthly.forEach(function(v) {
+            if (v !== null) { sum += v; acc.push(sum); } else acc.push(null);
+        });
+        var lw = (i === showYears.length - 1) ? 2.5 : 1.5;
+        mSeries.push({ name: y, data: monthly, color: PALETTE[i], lineWidth: lw });
+        aSeries.push({ name: y, data: acc,     color: PALETTE[i], lineWidth: lw, marker: { enabled: false } });
+    });
+
+    var base = {
+        chart:   { style: { fontFamily: "Share Tech Mono, monospace" }, backgroundColor: "#ffffff" },
+        xAxis:   { categories: MONTHS,
+                   labels: { style: { color: "#64748b", fontSize: "10px" } },
+                   lineColor: "#e2e8f0", gridLineColor: "#e2e8f0", tickColor: "#e2e8f0" },
+        yAxis:   { labels: { style: { color: "#64748b", fontSize: "10px" } },
+                   gridLineColor: "#e2e8f0", title: { text: "" } },
+        legend:  { itemStyle: { color: "#1e293b", fontSize: "10px", fontWeight: "400" },
+                   itemHoverStyle: { color: "#000" } },
+        tooltip: { backgroundColor: "#fff", borderColor: "#e2e8f0",
+                   style: { color: "#1e293b" },
+                   formatter: function() {
+                     return "<b>" + this.x + "</b><br>" + this.series.name +
+                            ": <b>" + (this.y || 0).toLocaleString() + "</b>";
+                   }},
+        credits: { enabled: false },
+        plotOptions: { series: { animation: { duration: 400 } } }
+    };
+
+    cMonthly = Highcharts.chart("chart-monthly", Object.assign({}, base, {
+        chart:  Object.assign({}, base.chart, { type: "spline", margin: [20, 10, 36, 64] }),
+        series: mSeries
+    }));
+    cAcc = Highcharts.chart("chart-acc", Object.assign({}, base, {
+        chart:  Object.assign({}, base.chart, { type: "spline", margin: [20, 10, 36, 64] }),
+        series: aSeries
+    }));
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────
+function buildTable(stats) {
+    var years = Object.keys(stats).sort(function(a,b) { return b - a; });
+    var colMax = {};
+    MONTHS.forEach(function(m) {
+        var mx = 0;
+        years.forEach(function(y) { if ((stats[y][m] || 0) > mx) mx = stats[y][m]; });
+        colMax[m] = mx;
+    });
+
+    var tbl  = document.getElementById("htable");
+    var html = "<thead><tr><th>Year</th>";
+    MONTHS.forEach(function(m) { html += "<th>" + m + "</th>"; });
+    html += "<th style='border-left:1px solid var(--border)'>Total</th></tr></thead><tbody>";
+
+    years.forEach(function(y) {
+        var total = MONTHS.reduce(function(s,m) { return s + (stats[y][m] || 0); }, 0);
+        html += "<tr><td onclick=\"switchToHeatmap('" + y + "')\">" + y + "</td>";
+        MONTHS.forEach(function(m) {
+            var v = stats[y][m];
+            if (v == null) {
+                html += "<td class='absent'>—</td>";
+            } else {
+                var isPeak = v > 0 && v === colMax[m];
+                html += "<td class='" + (isPeak ? "peak" : "") + "'>" + (v ? v.toLocaleString() : "0") + "</td>";
+            }
+        });
+        html += "<td class='sum'>" + total.toLocaleString() + "</td></tr>";
+    });
+    html += "</tbody>";
+    tbl.innerHTML = html;
+}
+
+// Click year in table → switch heatmap to that year
+function switchToHeatmap(year) {
+    setMapMode("heatmap");
+    var pill = Array.from(document.querySelectorAll(".year-pill"))
+                    .find(function(b) { return b.textContent === year; });
+    if (pill) selectYear(year, pill);
+}
+
+// ── COUNT-UP ──────────────────────────────────────────────────────────
+function countUp(el, target, ms, delay) {
+    setTimeout(function() {
+        var t0 = performance.now();
+        (function tick(now) {
+            var p = Math.min((now - t0) / ms, 1);
+            el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target).toLocaleString();
+            if (p < 1) requestAnimationFrame(tick);
+            else el.textContent = target.toLocaleString();
+        })(t0);
+    }, delay || 0);
+}
+
+// Preserve yesterday strike count across mode switches
+document.addEventListener("DOMContentLoaded", function() {
+    var footer = document.getElementById("map-count-label");
+    var observer = new MutationObserver(function() {
+        var txt = footer.textContent;
+        if (txt && txt !== "—" && !footer.dataset.total) {
+            footer.dataset.total = txt;
+        }
+    });
+    observer.observe(footer, { childList: true, characterData: true, subtree: true });
+});
+</script>
 </body>
+</html>

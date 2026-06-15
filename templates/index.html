@@ -366,7 +366,7 @@ function initMap(latest) {
         var radius = Math.max(4, Math.min(10, 3 + Math.sqrt(g.count)));
         var m = L.circleMarker([g.lat, g.lon], {
             radius: radius, fillColor: "#2563eb",
-            color: "rgba(37,99,235,0.20)", weight: 8, opacity: 0.5, fillOpacity: 1
+            color: "#ffffff", weight: 1.5, opacity: 1, fillOpacity: 0.85
         });
         m.bindTooltip(
             "<div style='line-height:1.65'>" +

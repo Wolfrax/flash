@@ -16,6 +16,7 @@ import argparse
 import os
 import calendar
 import signal
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -112,8 +113,22 @@ class Flash:
 
             logger.info("Processing {}".format(url))
 
-            try:
-                data = requests.get(url).json()
+            retries = 3
+            retry_delay = 30  # seconds
+            data = None
+            for attempt in range(1, retries + 1):
+                try:
+                    data = requests.get(url).json()
+                    break
+                except requests.exceptions.RequestException as e:
+                    if attempt < retries:
+                        logger.warning("Error ({})getting {}, retrying ({}/{})".format(
+                            e, url, attempt, retries))
+                        time.sleep(retry_delay)
+                    else:
+                        logger.warning("Error ({})getting {}".format(e, url))
+
+            if data is not None:
                 self.latest['date'] = str(now)
                 self.latest['data'] = []
 
@@ -134,9 +149,6 @@ class Flash:
                     self.latest['data'].append({'lat': data_elem['lat'], 'lon': data_elem['lon']})
 
                     self._stats(now)
-
-            except requests.exceptions.RequestException as e:
-                logger.warning("Error ({})getting {}".format(e, url))
 
             now += timedelta(days=1)
 

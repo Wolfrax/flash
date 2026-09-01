@@ -341,8 +341,8 @@ function initHero(stats, latest) {
 // ── MAP ───────────────────────────────────────────────────────────────
 function initMap(latest) {
     var tiles = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-        { attribution: "&#169; OpenStreetMap &#169; CARTO", subdomains: "abcd", maxZoom: 18 }
+        "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+        { attribution: "&#169; Esri &mdash; Esri, DeLorme, NAVTEQ", maxZoom: 18 }
     );
     map = L.map("map", { center: HOME, zoom: HOME_ZOOM, layers: [tiles] });
 

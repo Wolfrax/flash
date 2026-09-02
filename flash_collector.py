@@ -38,13 +38,14 @@ logger.addHandler(http_handler)
 class Flash:
     def __init__(self, from_date=None, to_date=None):
         # Assume from_date/to_date in format '2023-01-01'
-        # If to_date is None, assume today's date
+        # If to_date is None, assume yesterday's date (the collector runs shortly
+        # after midnight, so "yesterday" is the most recently completed day)
 
         if from_date is None:
-            from_date = datetime.today().strftime('%Y-%m-%d')
+            from_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
 
         if to_date is None:
-            to_date = datetime.today().strftime('%Y-%m-%d')
+            to_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
 
         try:
             self.from_date = datetime.strptime(from_date, "%Y-%m-%d")

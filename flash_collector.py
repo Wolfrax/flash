@@ -36,7 +36,9 @@ logger.addHandler(http_handler)
 
 
 class Flash:
-    def __init__(self, from_date=None, to_date=None):
+    def __init__(self, from_date=None, to_date=None, force=False):
+        self.force = force
+
         # Assume from_date/to_date in format '2023-01-01'
         # If to_date is None, assume yesterday's date (the collector runs shortly
         # after midnight, so "yesterday" is the most recently completed day)
@@ -67,6 +69,7 @@ class Flash:
                 self.meta = json.load(f)
         except FileNotFoundError:
             self.meta = {'db_files': [self.db_fn]}
+        self.meta.setdefault('processed_days', [])
 
         self.stats_fn = os.path.join('static', 'flash_stats.json')
         try:
@@ -106,6 +109,12 @@ class Flash:
             if now.year > (now - timedelta(days=1)).year:
                 self._year_shift(now)
 
+            day_key = now.strftime('%Y-%m-%d')
+            if day_key in self.meta['processed_days'] and not self.force:
+                logger.warning("Skipping {}, already processed (use --force to reprocess)".format(day_key))
+                now += timedelta(days=1)
+                continue
+
             url = expand('https://opendata-download-lightning.smhi.se/api/version/latest/'
                          'year/{year}/month/{month}/day/{day}/data.json',
                          year=str(now.year),
@@ -130,6 +139,9 @@ class Flash:
                         logger.warning("Error ({})getting {}".format(e, url))
 
             if data is not None:
+                if day_key not in self.meta['processed_days']:
+                    self.meta['processed_days'].append(day_key)
+
                 self.latest['date'] = str(now)
                 self.latest['data'] = []
 
@@ -178,8 +190,10 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("-s", "--start", required=False, default=None, help="start date (YYYY-MM-DD)")
     ap.add_argument("-e", "--end", required=False, default=None, help="end date (YYYY-MM-DD)")
+    ap.add_argument("-f", "--force", action="store_true",
+                     help="reprocess days already recorded as collected")
     args = vars(ap.parse_args())
 
-    flash = Flash(from_date=args['start'], to_date=args['end'])
+    flash = Flash(from_date=args['start'], to_date=args['end'], force=args['force'])
     flash.get()
     flash.save()

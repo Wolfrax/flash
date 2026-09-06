@@ -103,19 +103,25 @@ class Flash:
         else:
             self.stats['data'][year][month] += 1
 
-    def _fetch(self, url):
+    def _fetch(self, url, log_errors=True):
         retries = 3
         retry_delay = 30  # seconds
         for attempt in range(1, retries + 1):
             try:
-                return requests.get(url).json()
-            except requests.exceptions.RequestException as e:
-                if attempt < retries:
+                data = requests.get(url).json()
+                if not isinstance(data, dict) or 'values' not in data:
+                    raise ValueError("unexpected response format (missing 'values')")
+                return data
+            except (requests.exceptions.RequestException, ValueError) as e:
+                if not log_errors:
+                    pass
+                elif attempt < retries:
                     logger.warning("Error ({})getting {}, retrying ({}/{})".format(
                         e, url, attempt, retries))
-                    time.sleep(retry_delay)
                 else:
                     logger.warning("Error ({})getting {}".format(e, url))
+                if attempt < retries:
+                    time.sleep(retry_delay)
         return None
 
     def get(self):
@@ -140,23 +146,19 @@ class Flash:
 
             data = self._fetch(url)
 
-            # TEMP: SMHI's publish time for a just-completed day has shifted and is
-            # currently unknown (used to be ready by 23:59, now still unavailable at
-            # 01:00). Probe hourly to pin down when it actually becomes available.
-            # Remove this block once that time is known and the timer is tuned to it.
+            # SMHI's publish time for a just-completed day is inconsistent (seen
+            # anywhere from immediate up to ~4h after midnight). Retry hourly,
+            # capped at 12h, without logging in between to keep noise down; only
+            # log if it's still unavailable after exhausting the cap.
             if data is None:
-                max_outer = 6
+                max_outer = 12
                 for outer in range(1, max_outer + 1):
-                    logger.warning("TEMP probe: {} still unavailable, waiting 1h before outer retry {}/{}".format(
-                        day_key, outer, max_outer))
                     time.sleep(3600)
-                    data = self._fetch(url)
+                    data = self._fetch(url, log_errors=False)
                     if data is not None:
-                        logger.warning("TEMP probe: {} became available on outer retry {}/{} (~{}h after first attempt)".format(
-                            day_key, outer, max_outer, outer))
                         break
                 else:
-                    logger.warning("TEMP probe: giving up on {} after {} hourly retries".format(day_key, max_outer))
+                    logger.warning("Giving up on {} after {}h of hourly retries".format(day_key, max_outer))
 
             if data is not None:
                 if day_key not in self.meta['processed_days']:

@@ -144,12 +144,13 @@ class Flash:
 
             logger.info("Processing {}".format(url))
 
-            data = self._fetch(url)
-
             # SMHI's publish time for a just-completed day is inconsistent (seen
-            # anywhere from immediate up to ~4h after midnight). Retry hourly,
-            # capped at 12h, without logging in between to keep noise down; only
-            # log if it's still unavailable after exhausting the cap.
+            # anywhere from immediate up to ~4h after midnight), so a failure on
+            # the first attempt is routine, not exceptional. Retry hourly, capped
+            # at 12h, without logging in between to keep noise down; only log if
+            # it's still unavailable after exhausting the cap.
+            data = self._fetch(url, log_errors=False)
+
             if data is None:
                 max_outer = 12
                 for outer in range(1, max_outer + 1):
